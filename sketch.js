@@ -135,6 +135,57 @@ window.s1 = function ($_p) {
     }
   };
 
+  const checkPuzzle = () => {
+    const tolerance = 10; // Position tolerance in pixels
+    let allMatch = true;
+  
+    // Check if each puzzle shape has a matching chosen shape
+    for (let i = 0; i < puzzleShapes.length; i++) {
+      const puzzleShape = puzzleShapes[i];
+      let matchFound = false;
+  
+      for (let j = 0; j < shapesToChoose.length; j++) {
+        const chosenShape = shapesToChoose[j];
+  
+        // if (puzzleShape.shape !== chosenShape.shape)  return false;
+        if (puzzleShape.shape === chosenShape.shape) {
+          const posMatch = 
+            Math.abs(chosenShape.position[0] - puzzleShape.position[0]) <= tolerance &&
+            Math.abs(chosenShape.position[1] - puzzleShape.position[1]) <= tolerance;
+  
+            if (selectedShape === chosenShape) 
+            if (posMatch)  console.log(posMatch);
+            // console.log(chosenShape.shape, puzzleShape.shape);
+            // console.log(chosenShape.position, puzzleShape.position);
+            // console.log(chosenShape.rotation, puzzleShape.rotation);
+            
+          let rotMatch;
+          if (chosenShape.shape === 'square' || chosenShape.shape === 'parallelogram') {
+            rotMatch = [0, 90, 180, 270].some(angle => Math.abs((chosenShape.rotation % 360) - angle) <= 5);
+          } else {
+            rotMatch = Math.abs((chosenShape.rotation % 360) - (puzzleShape.rotation % 360)) <= 5;
+          }
+  
+          if (posMatch && rotMatch) {
+            matchFound = true;
+            break; // Stop searching once a match is found
+          }
+        }
+      }
+  
+      if (!matchFound) {
+        allMatch = false;
+        // break; // Exit if any puzzle shape has no matching chosen shape
+      }
+    }
+  
+    if (allMatch) {
+      console.log("Puzzle completed!");
+      // Additional actions on puzzle completion can go here.
+    }
+  
+  };
+
   $_p.setup = () => {  
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
@@ -195,6 +246,8 @@ window.s1 = function ($_p) {
         }
       }
     }
+
+    
   };
 
   $_p.mousePressed = () => {
@@ -231,6 +284,7 @@ window.s1 = function ($_p) {
       draggedShape.dragging = false;
       draggedShape = null;
     }
+    checkPuzzle();
   };
 
   $_p.keyPressed = () => {
@@ -248,6 +302,7 @@ window.s1 = function ($_p) {
       isKeyHeld = false;
       selectedShape.rotateFinished();
     }
+    checkPuzzle();
   };
 };
 
