@@ -5,17 +5,22 @@ window.s1 = function ($_p)  {
   let puzzleShapes;
 
   class Shape {
-    constructor(shape, position = [0, 0], rotation = 0, color = [255, 255, 255], size = 60, width = 60, height = 60, type = 'puzzle') {
+    constructor({ shape, position = [0, 0], rotation = 0, type = 'puzzle' }) {
+      // Find the shape details based on the shape type
+      const shapeDetails = shapes.find(s => s.shape === shape) || {};
+
+      // Set properties based on shape details or default values
       this.shape = shape;
       this.position = position;
       this.rotation = rotation;
-      this.color = color;
-      this.size = size;
-      this.width = width;
-      this.height = height;      
+      this.color = shapeDetails.color || [255, 255, 255];
+      this.size = shapeDetails.size || 60;
+      this.width = shapeDetails.width || 60;
+      this.height = shapeDetails.height || 60;
       this.type = type;
+      this.dragging = false;
     }
-    
+
     display() {
       $_p.push();
       $_p.translate(this.position[0], this.position[1]);
@@ -36,48 +41,62 @@ window.s1 = function ($_p)  {
         $_p.quad(0, 0, this.width, 0, this.width + offset, this.height, offset, this.height);
       }
       $_p.pop();
+
+      if (this.dragging) {
+        this.position = [$_p.mouseX - $_p.width / 2, $_p.mouseY - $_p.height / 2];
+      }
     }
   }
 
   const setupPuzzle = () => {
+    const radius = 300;
+
     puzzleShapes = puzzles[currentPuzzle].shapes.map(shapeData => {
-      const shapeDetails = shapes.find(s => s.shape === shapeData.shape);
-      return new Shape(
-        shapeData.shape, 
-        shapeData.position, 
-        shapeData.rotation || 0, 
-        shapeDetails.color, 
-        shapeDetails.size || 60, 
-        shapeDetails.width || 60, 
-        shapeDetails.height || 60,
-        'puzzle'
-      );
+      return new Shape({
+        shape: shapeData.shape,
+        position: shapeData.position,
+        rotation: shapeData.rotation || 0,
+        type: 'puzzle'
+      });
     });
 
-    shapesToChoose = puzzleShapes.map(shape => new Shape(
-      shape.shape, 
-      shape.position, 
-      shape.rotation, 
-      shape.color, 
-      shape.size, 
-      shape.width, 
-      shape.height,
-      'piece'
-    ));
+    shapesToChoose = puzzleShapes.map(shape => new Shape({
+      shape: shape.shape,
+      position: shape.position,
+      rotation: shape.rotation,
+      type: 'piece'
+    }));
+
+
+    
 
     for (let i = 0; i < 4; i++) {
       let randomShape = shapes[Math.floor(Math.random() * shapes.length)];
-      shapesToChoose.push(new Shape(
-        randomShape.shape,
-        [0, 0], 
-        0, 
-        randomShape.color, 
-        randomShape.size || 60, 
-        randomShape.width || 60, 
-        randomShape.height || 60,
-        'piece'
-      ));      
+      shapesToChoose.push(new Shape({
+        shape: randomShape.shape,
+        position: [0, 0],
+        rotation: 0,
+        type: 'piece'
+      }));
     }
+
+    const angleBetweenShapes = Math.PI * 2 / shapesToChoose.length;
+
+
+
+    // Calculate initial positions based on radius and angle
+    for (let i = 0; i < shapesToChoose.length; i++) {
+      let shape = shapesToChoose[i];
+      const x = Math.cos(angleBetweenShapes * i) * radius;
+      const y = Math.sin(angleBetweenShapes * i) * radius;
+      let rotation = Math.atan2(y, x) * 180 / Math.PI;
+      if (i % 2 === 0) rotation += 180;
+
+      shape.position = [x, y];
+      shape.rotation = rotation;
+    }
+
+    
 
     shapesToChoose.sort(() => Math.random() - 0.5);
   };
@@ -85,7 +104,7 @@ window.s1 = function ($_p)  {
   $_p.setup = () => {  
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    canvas = $_p.createCanvas(windowWidth,windowHeight);  
+    canvas = $_p.createCanvas(windowWidth, windowHeight);  
     canvas.parent("#content");
     setupPuzzle();
   };
@@ -152,6 +171,13 @@ window.s1 = function ($_p)  {
     }
   ];
 
+  // resize canvas on window resize
+  $_p.windowResized = () => {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    $_p.resizeCanvas(windowWidth, windowHeight);
+  };
+
   $_p.draw = () => {        
     $_p.background(2);  
     $_p.stroke(255);
@@ -161,28 +187,32 @@ window.s1 = function ($_p)  {
     $_p.text("Puzzle " + currentPuzzle, 10, 30);
 
     $_p.translate($_p.width / 2, $_p.height / 2);
-    
+
     puzzleShapes.forEach(shape => shape.display());
-
-    const radius = 300;
-    const angleBetweenShapes = Math.PI * 2 / shapesToChoose.length;
-
-    shapesToChoose.forEach((shape, i) => {
-      const x = Math.cos(angleBetweenShapes * i) * radius;
-      const y = Math.sin(angleBetweenShapes * i) * radius;
-      let rotation = Math.atan2(y, x) * 180 / Math.PI;
-      if (i % 2 === 0) rotation += 180;
-
-      shape.position = [x, y];
-      shape.rotation = rotation;
-
-      shape.display(true);
-    });
+    shapesToChoose.forEach(shape => shape.display());
   };
 
   $_p.mousePressed = () => {
-    // click and drag shape if it's one of shapesToChoose
-    // check to see if clicking on a shape to choose
+    shapesToChoose.forEach(shape => {
+      const x = $_p.mouseX - $_p.width / 2 - shape.position[0];
+      const y = $_p.mouseY - $_p.height / 2 - shape.position[1];
+      const distance = Math.sqrt(x * x + y * y);
+      if (distance < shape.size / 2) {
+        shape.dragging = true;
+      }
+    });
+  };
+
+  $_p.mouseDragged = () => {
+    shapesToChoose.forEach(shape => {
+      if (shape.dragging) {
+        shape.position = [$_p.mouseX - $_p.width / 2, $_p.mouseY - $_p.height / 2];
+      }
+    });
+  };
+
+  $_p.mouseReleased = () => {
+    shapesToChoose.forEach(shape => shape.dragging = false);
   };
 };
 
