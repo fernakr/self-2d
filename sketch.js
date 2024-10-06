@@ -1,10 +1,31 @@
 window.s1 = function ($_p)  {  
   
+  let currentPuzzle = 0;
+  let shapesToChoose;
+  let puzzleShapes;
+
+  const setupPuzzle = () => {
+    puzzleShapes = puzzles[currentPuzzle].shapes;
+    shapesToChoose = [...puzzleShapes];
+    // add some fake random shapes
+    for (let i = 0; i < 3; i++) {
+      let randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+      shapesToChoose.push({
+        shape: randomShape.shape, 
+      });      
+    }
+    // shuffle the shapes
+
+    shapesToChoose = shapesToChoose.sort(() => Math.random() - 0.5);
+  }
+
   $_p.setup = () => {  
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     canvas = $_p.createCanvas(windowWidth,windowHeight);  
     canvas.parent("#content");
+    setupPuzzle();
+
   }
 
   let shapes = [
@@ -32,6 +53,7 @@ window.s1 = function ($_p)  {
       shape: 'parallelogram',
       width: 120,      
       height: 60,
+      color: [0, 0, 255],
     }
   ];
 
@@ -71,12 +93,15 @@ window.s1 = function ($_p)  {
     }
   ];
 
-  let currentPuzzle = 0;
+  
 
-  const drawShape = (shape) => {
+  const drawShape = (shape, useColor) => {
+    const shapeObject = shapes.find(s => s.shape === shape.shape);
+    const { size, color, width, height } = shapeObject;
     $_p.push();
-    $_p.fill(255);
-    $_p.stroke(255);
+    let shapeColor = useColor ? color : [255, 255, 255];
+    $_p.fill(shapeColor);
+    $_p.stroke(shapeColor);
     $_p.strokeWeight(2);
     
 
@@ -87,8 +112,7 @@ window.s1 = function ($_p)  {
     $_p.translate(x, y);
     if (shape.rotation) $_p.rotate($_p.radians(shape.rotation));
 
-    const shapeObject = shapes.find(s => s.shape === shape.shape);
-    const { size, color, width, height } = shapeObject;
+
 
     // Draw the shape at the origin (0, 0) now that we've translated to its position
     if (shape.shape === 'square') {
@@ -104,6 +128,8 @@ window.s1 = function ($_p)  {
     $_p.pop();
   };
 
+  
+
   $_p.draw = () => {        
     $_p.background(2);  
     $_p.stroke(255);
@@ -113,10 +139,30 @@ window.s1 = function ($_p)  {
     $_p.text("Puzzle " + currentPuzzle, 10, 30);
 
     $_p.translate($_p.width / 2, $_p.height / 2);
-    for (let i = 0; i < puzzles[currentPuzzle].shapes.length; i++) {
-      const shape = puzzles[currentPuzzle].shapes[i];
+    
+    for (let i = 0; i < puzzleShapes.length; i++) {
+      const shape = puzzleShapes[i];
       drawShape(shape);
     }
+    
+    
+    // display the shapes to choose from radially from the center
+    const radius = 300;
+    const angleBetweenShapes = Math.PI * 2 / shapesToChoose.length;
+
+    for (let i = 0; i < shapesToChoose.length; i++) {
+      const shape = shapesToChoose[i];
+      const x = Math.cos(angleBetweenShapes * i) * radius;
+      const y = Math.sin(angleBetweenShapes * i) * radius;
+      let rotation = Math.atan2(y, x) * 180 / Math.PI;
+      // every other shape is rotated 180 degrees
+      if (i % 2 === 0) {
+        rotation += 180;
+      }
+      drawShape({ ...shape, position: [x, y], rotation }, true);
+    }
+    
+
   };
 };
 
