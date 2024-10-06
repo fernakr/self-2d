@@ -1,15 +1,13 @@
-window.s1 = function ($_p)  {  
+window.s1 = function ($_p) {  
 
   let currentPuzzle = 0;
   let shapesToChoose;
   let puzzleShapes;
+  let draggedShape = null; // To keep track of the currently dragged shape
 
   class Shape {
     constructor({ shape, position = [0, 0], rotation = 0, type = 'puzzle' }) {
-      // Find the shape details based on the shape type
       const shapeDetails = shapes.find(s => s.shape === shape) || {};
-
-      // Set properties based on shape details or default values
       this.shape = shape;
       this.position = position;
       this.rotation = rotation;
@@ -19,6 +17,8 @@ window.s1 = function ($_p)  {
       this.height = shapeDetails.height || 60;
       this.type = type;
       this.dragging = false;
+      this.offset = [0, 0];  // To store offset during dragging
+      this.hovered = false; // To track hover state
     }
 
     display() {
@@ -26,10 +26,19 @@ window.s1 = function ($_p)  {
       $_p.translate(this.position[0], this.position[1]);
       if (this.rotation) $_p.rotate($_p.radians(this.rotation));
 
+      // Set color for outline based on hover state
+
+      let stroke = this.type === 'puzzle' ? [255,255,255] : this.color;
+      if (this.hovered) {
+        // yellow
+        stroke = [255, 255, 0];
+      }
+      $_p.stroke(stroke);
+
+      $_p.strokeWeight(2);
+
       let shapeColor = this.type !== 'puzzle' ? this.color : [255, 255, 255];
       $_p.fill(shapeColor);
-      $_p.stroke(shapeColor);
-      $_p.strokeWeight(2);
 
       if (this.shape === 'square') {
         $_p.rectMode($_p.CENTER);
@@ -43,14 +52,39 @@ window.s1 = function ($_p)  {
       $_p.pop();
 
       if (this.dragging) {
-        this.position = [$_p.mouseX - $_p.width / 2, $_p.mouseY - $_p.height / 2];
+        this.position[0] = $_p.mouseX - $_p.width / 2 + this.offset[0];
+        this.position[1] = $_p.mouseY - $_p.height / 2 + this.offset[1];
       }
+    }
+
+    isMouseOver(mx, my) {
+      const [px, py] = this.position;
+
+      // Translate and rotate mouse coordinates into the shape's local space
+      let localX = mx - ($_p.width / 2 + px);
+      let localY = my - ($_p.height / 2 + py);
+      
+      const angleRad = -$_p.radians(this.rotation);  // Invert rotation angle for coordinate transformation
+      const rotatedX = localX * Math.cos(angleRad) - localY * Math.sin(angleRad);
+      const rotatedY = localX * Math.sin(angleRad) + localY * Math.cos(angleRad);
+
+      // Check collision based on shape type
+      let isOver = false;
+      if (this.shape === 'square') {
+        isOver = Math.abs(rotatedX) <= this.size / 2 && Math.abs(rotatedY) <= this.size / 2;
+      } else if (this.shape === 'triangle') {
+        isOver = rotatedX >= 0 && rotatedX <= this.width && rotatedY >= 0 && rotatedY <= this.height;
+      } else if (this.shape === 'parallelogram') {
+        const offset = this.width / 2;
+        isOver = rotatedX >= -offset && rotatedX <= this.width + offset && rotatedY >= 0 && rotatedY <= this.height;
+      }
+      
+      this.hovered = isOver; // Update the hover state
+      return isOver;
     }
   }
 
   const setupPuzzle = () => {
-    const radius = 300;
-
     puzzleShapes = puzzles[currentPuzzle].shapes.map(shapeData => {
       return new Shape({
         shape: shapeData.shape,
@@ -67,9 +101,7 @@ window.s1 = function ($_p)  {
       type: 'piece'
     }));
 
-
-    
-
+    // Add random shapes
     for (let i = 0; i < 4; i++) {
       let randomShape = shapes[Math.floor(Math.random() * shapes.length)];
       shapesToChoose.push(new Shape({
@@ -80,11 +112,10 @@ window.s1 = function ($_p)  {
       }));
     }
 
+    // Calculate position and rotation after all shapes are added
+    const radius = 300;
     const angleBetweenShapes = Math.PI * 2 / shapesToChoose.length;
 
-
-
-    // Calculate initial positions based on radius and angle
     for (let i = 0; i < shapesToChoose.length; i++) {
       let shape = shapesToChoose[i];
       const x = Math.cos(angleBetweenShapes * i) * radius;
@@ -95,10 +126,6 @@ window.s1 = function ($_p)  {
       shape.position = [x, y];
       shape.rotation = rotation;
     }
-
-    
-
-    shapesToChoose.sort(() => Math.random() - 0.5);
   };
 
   $_p.setup = () => {  
@@ -171,7 +198,6 @@ window.s1 = function ($_p)  {
     }
   ];
 
-  // resize canvas on window resize
   $_p.windowResized = () => {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
@@ -190,31 +216,59 @@ window.s1 = function ($_p)  {
 
     puzzleShapes.forEach(shape => shape.display());
     shapesToChoose.forEach(shape => shape.display());
+
+    // Draw the currently dragged shape on top
+    if (draggedShape) {
+      draggedShape.display();
+    }
   };
 
   $_p.mousePressed = () => {
-    shapesToChoose.forEach(shape => {
-      const x = $_p.mouseX - $_p.width / 2 - shape.position[0];
-      const y = $_p.mouseY - $_p.height / 2 - shape.position[1];
-      const distance = Math.sqrt(x * x + y * y);
-      if (distance < shape.size / 2) {
+    // Check shapesToChoose in reverse order to find the topmost shape
+    for (let i = shapesToChoose.length - 1; i >= 0; i--) {
+      const shape = shapesToChoose[i];
+      if (shape.isMouseOver($_p.mouseX, $_p.mouseY)) {
         shape.dragging = true;
+        draggedShape = shape; // Set the currently dragged shape
+
+        // Move the dragged shape to the end of the array
+        shapesToChoose.splice(i, 1); // Remove it from its current position
+        shapesToChoose.push(draggedShape); // Add it to the end of the array
+
+        // Calculate offset and store it
+        shape.offset[0] = shape.position[0] - ($_p.mouseX - $_p.width / 2);
+        shape.offset[1] = shape.position[1] - ($_p.mouseY - $_p.height / 2);
+        break; // Stop searching after finding the topmost shape
       }
-    });
+    }
   };
 
   $_p.mouseDragged = () => {
-    shapesToChoose.forEach(shape => {
-      if (shape.dragging) {
-        shape.position = [$_p.mouseX - $_p.width / 2, $_p.mouseY - $_p.height / 2];
-      }
-    });
+    if (draggedShape) {
+      draggedShape.position[0] = $_p.mouseX - $_p.width / 2 + draggedShape.offset[0];
+      draggedShape.position[1] = $_p.mouseY - $_p.height / 2 + draggedShape.offset[1];
+    }
   };
 
   $_p.mouseReleased = () => {
-    shapesToChoose.forEach(shape => shape.dragging = false);
+    if (draggedShape) {
+      draggedShape.dragging = false;
+      draggedShape = null; // Reset the currently dragged shape
+    }
   };
+
+  $_p.mouseMoved = () => {
+    // Reset hovered state for all shapes
+    for (let shape of shapesToChoose) {
+      shape.hovered = false; // Reset hover state
+      shape.isMouseOver($_p.mouseX, $_p.mouseY); // Update hover state
+    }
+  };
+
 };
+
+
+
 
 if (window.p5instance) window.p5instance.remove();
 window.p5instance = new p5(window.s1);
