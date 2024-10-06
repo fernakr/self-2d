@@ -151,13 +151,7 @@ window.s1 = function ($_p) {
         if (puzzleShape.shape === chosenShape.shape) {
           const posMatch = 
             Math.abs(chosenShape.position[0] - puzzleShape.position[0]) <= tolerance &&
-            Math.abs(chosenShape.position[1] - puzzleShape.position[1]) <= tolerance;
-  
-            if (selectedShape === chosenShape) 
-            if (posMatch)  console.log(posMatch);
-            // console.log(chosenShape.shape, puzzleShape.shape);
-            // console.log(chosenShape.position, puzzleShape.position);
-            // console.log(chosenShape.rotation, puzzleShape.rotation);
+            Math.abs(chosenShape.position[1] - puzzleShape.position[1]) <= tolerance;            
             
           let rotMatch;
           if (chosenShape.shape === 'square' || chosenShape.shape === 'parallelogram') {
@@ -168,6 +162,10 @@ window.s1 = function ($_p) {
   
           if (posMatch && rotMatch) {
             matchFound = true;
+            // snap to puzzle position
+            chosenShape.position = puzzleShape.position;
+            // chosenShape.rotation = puzzleShape.rotation;
+
             break; // Stop searching once a match is found
           }
         }
