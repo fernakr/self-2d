@@ -1,23 +1,86 @@
 window.s1 = function ($_p)  {  
-  
+
   let currentPuzzle = 0;
   let shapesToChoose;
   let puzzleShapes;
 
-  const setupPuzzle = () => {
-    puzzleShapes = puzzles[currentPuzzle].shapes;
-    shapesToChoose = [...puzzleShapes];
-    // add some fake random shapes
-    for (let i = 0; i < 3; i++) {
-      let randomShape = shapes[Math.floor(Math.random() * shapes.length)];
-      shapesToChoose.push({
-        shape: randomShape.shape, 
-      });      
+  class Shape {
+    constructor(shape, position = [0, 0], rotation = 0, color = [255, 255, 255], size = 60, width = 60, height = 60, type = 'puzzle') {
+      this.shape = shape;
+      this.position = position;
+      this.rotation = rotation;
+      this.color = color;
+      this.size = size;
+      this.width = width;
+      this.height = height;      
+      this.type = type;
     }
-    // shuffle the shapes
+    
+    display() {
+      $_p.push();
+      $_p.translate(this.position[0], this.position[1]);
+      if (this.rotation) $_p.rotate($_p.radians(this.rotation));
 
-    shapesToChoose = shapesToChoose.sort(() => Math.random() - 0.5);
+      let shapeColor = this.type !== 'puzzle' ? this.color : [255, 255, 255];
+      $_p.fill(shapeColor);
+      $_p.stroke(shapeColor);
+      $_p.strokeWeight(2);
+
+      if (this.shape === 'square') {
+        $_p.rectMode($_p.CENTER);
+        $_p.rect(0, 0, this.size, this.size);      
+      } else if (this.shape === 'triangle') {
+        $_p.triangle(0, 0, this.width, 0, this.width / 2, this.height);
+      } else if (this.shape === 'parallelogram') {
+        const offset = this.width / 2;
+        $_p.quad(0, 0, this.width, 0, this.width + offset, this.height, offset, this.height);
+      }
+      $_p.pop();
+    }
   }
+
+  const setupPuzzle = () => {
+    puzzleShapes = puzzles[currentPuzzle].shapes.map(shapeData => {
+      const shapeDetails = shapes.find(s => s.shape === shapeData.shape);
+      return new Shape(
+        shapeData.shape, 
+        shapeData.position, 
+        shapeData.rotation || 0, 
+        shapeDetails.color, 
+        shapeDetails.size || 60, 
+        shapeDetails.width || 60, 
+        shapeDetails.height || 60,
+        'puzzle'
+      );
+    });
+
+    shapesToChoose = puzzleShapes.map(shape => new Shape(
+      shape.shape, 
+      shape.position, 
+      shape.rotation, 
+      shape.color, 
+      shape.size, 
+      shape.width, 
+      shape.height,
+      'piece'
+    ));
+
+    for (let i = 0; i < 4; i++) {
+      let randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+      shapesToChoose.push(new Shape(
+        randomShape.shape,
+        [0, 0], 
+        0, 
+        randomShape.color, 
+        randomShape.size || 60, 
+        randomShape.width || 60, 
+        randomShape.height || 60,
+        'piece'
+      ));      
+    }
+
+    shapesToChoose.sort(() => Math.random() - 0.5);
+  };
 
   $_p.setup = () => {  
     const windowWidth = window.innerWidth;
@@ -25,10 +88,9 @@ window.s1 = function ($_p)  {
     canvas = $_p.createCanvas(windowWidth,windowHeight);  
     canvas.parent("#content");
     setupPuzzle();
+  };
 
-  }
-
-  let shapes = [
+  const shapes = [
     {
       shape: 'square',
       size: 60,      
@@ -63,12 +125,10 @@ window.s1 = function ($_p)  {
         {
           shape: 'square',          
           position: [30, 30],
-          // rotation: 20
         },
         {
           shape: 'square',          
           position: [-30, 30],
-          // rotation: 20
         },
         {
           shape: 'triangle',          
@@ -87,48 +147,10 @@ window.s1 = function ($_p)  {
         {
           shape: 'parallelogram',          
           position: [-60, 60],
-          // rotation: 20
         }
       ]
     }
   ];
-
-  
-
-  const drawShape = (shape, useColor) => {
-    const shapeObject = shapes.find(s => s.shape === shape.shape);
-    const { size, color, width, height } = shapeObject;
-    $_p.push();
-    let shapeColor = useColor ? color : [255, 255, 255];
-    $_p.fill(shapeColor);
-    $_p.stroke(shapeColor);
-    $_p.strokeWeight(2);
-    
-
-    const x = shape.position[0];
-    const y = shape.position[1];
-
-    // Translate to the shape's position and apply rotation if it has one
-    $_p.translate(x, y);
-    if (shape.rotation) $_p.rotate($_p.radians(shape.rotation));
-
-
-
-    // Draw the shape at the origin (0, 0) now that we've translated to its position
-    if (shape.shape === 'square') {
-      $_p.rectMode($_p.CENTER);
-      $_p.rect(0, 0, size, size);      
-    } else if (shape.shape === 'triangle') {
-      $_p.triangle(0, 0, width, 0, width / 2, height);
-    } else if (shape.shape === 'parallelogram') {
-      const offset = width / 2;
-      $_p.quad(0, 0, width, 0, width + offset, height, offset, height);
-    }
-
-    $_p.pop();
-  };
-
-  
 
   $_p.draw = () => {        
     $_p.background(2);  
@@ -140,29 +162,27 @@ window.s1 = function ($_p)  {
 
     $_p.translate($_p.width / 2, $_p.height / 2);
     
-    for (let i = 0; i < puzzleShapes.length; i++) {
-      const shape = puzzleShapes[i];
-      drawShape(shape);
-    }
-    
-    
-    // display the shapes to choose from radially from the center
+    puzzleShapes.forEach(shape => shape.display());
+
     const radius = 300;
     const angleBetweenShapes = Math.PI * 2 / shapesToChoose.length;
 
-    for (let i = 0; i < shapesToChoose.length; i++) {
-      const shape = shapesToChoose[i];
+    shapesToChoose.forEach((shape, i) => {
       const x = Math.cos(angleBetweenShapes * i) * radius;
       const y = Math.sin(angleBetweenShapes * i) * radius;
       let rotation = Math.atan2(y, x) * 180 / Math.PI;
-      // every other shape is rotated 180 degrees
-      if (i % 2 === 0) {
-        rotation += 180;
-      }
-      drawShape({ ...shape, position: [x, y], rotation }, true);
-    }
-    
+      if (i % 2 === 0) rotation += 180;
 
+      shape.position = [x, y];
+      shape.rotation = rotation;
+
+      shape.display(true);
+    });
+  };
+
+  $_p.mousePressed = () => {
+    // click and drag shape if it's one of shapesToChoose
+    // check to see if clicking on a shape to choose
   };
 };
 
