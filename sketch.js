@@ -135,6 +135,9 @@ window.s1 = function ($_p) {
       }));
     }
 
+    // shuffle
+    shapesToChoose = shapesToChoose.sort(() => Math.random() - 0.5);
+
     const radius = 300;
     const angleBetweenShapes = Math.PI * 2 / shapesToChoose.length;
 
