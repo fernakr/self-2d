@@ -29,59 +29,73 @@ window.s1 = function ($_p) {
 
     display() {
       $_p.push();
-      $_p.translate(this.position[0], this.position[1]);
-      if (this.rotation) $_p.rotate($_p.radians(this.rotation));
-
+      $_p.translate(this.position[0], this.position[1]); // Move to shape position
+      $_p.rotate($_p.radians(this.rotation)); // Rotate around the shape's center
+    
       // Set color for outline based on hover state
-      let stroke = this.type === 'puzzle' ? [255,255,255] : this.color;
+      let stroke = this.type === 'puzzle' ? [255, 255, 255] : this.color;
       if (this.hovered || this === selectedShape) {
         stroke = [255, 255, 0];
       }
       $_p.stroke(stroke);
-
+    
       $_p.strokeWeight(2);
       let shapeColor = this.type !== 'puzzle' ? this.color : [255, 255, 255];
       $_p.fill(shapeColor);
-
+    
+      // Draw shapes with center alignment
       if (this.shape === 'square') {
         $_p.rectMode($_p.CENTER);
         $_p.rect(0, 0, this.size, this.size);      
       } else if (this.shape === 'triangle') {
-        $_p.triangle(0, 0, this.width, 0, this.width / 2, this.height);
+        $_p.beginShape();
+        $_p.vertex(-this.width / 2, this.height / 2);
+        $_p.vertex(this.width / 2, this.height / 2);
+        $_p.vertex(0, -this.height / 2);
+        $_p.endShape($_p.CLOSE);
       } else if (this.shape === 'parallelogram') {
-        const offset = this.width / 2;
-        $_p.quad(0, 0, this.width, 0, this.width + offset, this.height, offset, this.height);
+        const offset = this.width / 4;
+        $_p.beginShape();
+        $_p.vertex(-this.width / 2 - offset/2, -this.height / 2);
+        $_p.vertex(this.width / 2 - offset/2, -this.height / 2);
+        $_p.vertex(this.width / 2 + offset/2, this.height / 2);
+        $_p.vertex(-this.width / 2 + offset/2, this.height / 2);
+        $_p.endShape($_p.CLOSE);
       }
       $_p.pop();
-
+    
       if (this.dragging) {
         this.position[0] = $_p.mouseX - $_p.width / 2 + this.offset[0];
         this.position[1] = $_p.mouseY - $_p.height / 2 + this.offset[1];
       }
     }
+    
+    
 
     isMouseOver(mx, my) {
       const [px, py] = this.position;
       let localX = mx - ($_p.width / 2 + px);
       let localY = my - ($_p.height / 2 + py);
-      const angleRad = -$_p.radians(this.rotation);  // Invert rotation angle for coordinate transformation
+      const angleRad = -$_p.radians(this.rotation); // Invert rotation angle for coordinate transformation
+    
+      // Rotate coordinates back to check within the shape’s bounds
       const rotatedX = localX * Math.cos(angleRad) - localY * Math.sin(angleRad);
       const rotatedY = localX * Math.sin(angleRad) + localY * Math.cos(angleRad);
-
+    
       let isOver = false;
       if (this.shape === 'square') {
         isOver = Math.abs(rotatedX) <= this.size / 2 && Math.abs(rotatedY) <= this.size / 2;
       } else if (this.shape === 'triangle') {
-        isOver = rotatedX >= 0 && rotatedX <= this.width && rotatedY >= 0 && rotatedY <= this.height;
+        isOver = rotatedX >= -this.width / 2 && rotatedX <= this.width / 2 && rotatedY >= -this.height / 2 && rotatedY <= this.height / 2;
       } else if (this.shape === 'parallelogram') {
         const offset = this.width / 2;
-        isOver = rotatedX >= -offset && rotatedX <= this.width + offset && rotatedY >= 0 && rotatedY <= this.height;
+        isOver = rotatedX >= -offset && rotatedX <= this.width + offset && rotatedY >= -this.height / 2 && rotatedY <= this.height / 2;
       }
-      
+    
       this.hovered = isOver;
       return isOver;
     }
-
+    
     rotate(angle) {
       this.rotation = (this.rotation + angle) % 360;
       if (this.rotation < 0) this.rotation += 360;
@@ -202,12 +216,12 @@ window.s1 = function ($_p) {
   let puzzles = [
     {
       shapes: [
-        { shape: 'square', position: [30, 30] },
-        { shape: 'square', position: [-30, 30] },
-        { shape: 'triangle', position: [0, 0], rotation: 180 },
-        { shape: 'triangle', position: [60, 0], rotation: 180 },
+        { shape: 'square', position: [30, 15] },
+        { shape: 'square', position: [-30, 15] },
+        { shape: 'triangle', position: [0, -30], rotation: 180 },
+        { shape: 'triangle', position: [30, -30]},
         { shape: 'triangle', position: [-30, -30] },
-        { shape: 'parallelogram', position: [-60, 60] }
+        { shape: 'parallelogram', position: [15, 75] }
       ]
     }
   ];
