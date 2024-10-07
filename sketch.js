@@ -47,7 +47,7 @@ window.s1 = function ($_p) {
       if (this.shape === 'square') {
         $_p.rectMode($_p.CENTER);
         $_p.rect(0, 0, this.size, this.size);      
-      } else if (this.shape === 'triangle') {
+      } else if (this.shape === 'triangle' || this.shape === 'bigTriangle') {
         $_p.beginShape();
         $_p.vertex(-this.width / 2, this.height / 2);
         $_p.vertex(this.width / 2, this.height / 2);
@@ -85,7 +85,7 @@ window.s1 = function ($_p) {
       let isOver = false;
       if (this.shape === 'square') {
         isOver = Math.abs(rotatedX) <= this.size / 2 && Math.abs(rotatedY) <= this.size / 2;
-      } else if (this.shape === 'triangle') {
+      } else if (this.shape === 'triangle' || this.shape === 'bigTriangle') {
         isOver = rotatedX >= -this.width / 2 && rotatedX <= this.width / 2 && rotatedY >= -this.height / 2 && rotatedY <= this.height / 2;
       } else if (this.shape === 'parallelogram') {
         const offset = this.width / 2;
@@ -102,7 +102,8 @@ window.s1 = function ($_p) {
     }
 
     rotateFinished() {
-      const snapAngle = Math.round(this.rotation / 45) * 45;
+      const snapAngleInc = 45;
+      const snapAngle = Math.round(this.rotation / snapAngleInc) * snapAngleInc;
       this.rotation = snapAngle;
     }
   }
@@ -124,7 +125,7 @@ window.s1 = function ($_p) {
       type: 'piece'
     }));
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < Math.ceil(puzzleShapes.length % 3 * 2 + 2); i++) {
       let randomShape = shapes[Math.floor(Math.random() * shapes.length)];
       shapesToChoose.push(new Shape({
         shape: randomShape.shape,
@@ -221,7 +222,11 @@ window.s1 = function ($_p) {
         { shape: 'triangle', position: [0, -30], rotation: 180 },
         { shape: 'triangle', position: [30, -30]},
         { shape: 'triangle', position: [-30, -30] },
-        { shape: 'parallelogram', position: [15, 75] }
+        { shape: 'parallelogram', position: [15, 75] },
+        { shape: 'triangle', position: [-40, -80], rotation: 45 },
+        { shape: 'triangle', position: [-40, -100], rotation: 45 + 90 },
+        { shape: 'triangle', position: [15, -80], rotation: 45 },
+        { shape: 'triangle', position: [15, -100], rotation: 45 + 90 },
       ]
     }
   ];
@@ -245,9 +250,9 @@ window.s1 = function ($_p) {
     puzzleShapes.forEach(shape => shape.display());
     shapesToChoose.forEach(shape => shape.display());
 
-    if (draggedShape) {
-      draggedShape.display();
-    }
+    // if (draggedShape) {
+    //   draggedShape.display();
+    // }
 
     if (selectedShape) {
       if (isKeyHeld && Date.now() - rotationStartTime > holdDelay) {
