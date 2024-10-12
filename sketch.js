@@ -12,7 +12,7 @@ window.s1 = function ($_p) {
   const holdDelay = 500; // 0.5 seconds in milliseconds
 
   class Shape {
-    constructor({ shape, position = [0, 0], rotation = 0, type = 'puzzle' }) {
+    constructor({ shape, position = [0, 0], rotation = 0, isPuzzle = true }) {
       const shapeDetails = shapes.find(s => s.shape === shape) || {};
       this.shape = shape;
       this.position = position;
@@ -21,10 +21,13 @@ window.s1 = function ($_p) {
       this.size = shapeDetails.size || 60;
       this.width = shapeDetails.width || 60;
       this.height = shapeDetails.height || 60;
-      this.type = type;
+      this.type = shapeDetails.type;
+      this.isPuzzle = isPuzzle;
+      
       this.dragging = false;
       this.offset = [0, 0];  // To store offset during dragging
       this.hovered = false; // To track hover state      
+      this.value = getValue(shapeDetails);
     }
 
     display() {
@@ -33,14 +36,14 @@ window.s1 = function ($_p) {
       $_p.rotate($_p.radians(this.rotation)); // Rotate around the shape's center
     
       // Set color for outline based on hover state
-      let stroke = this.type === 'puzzle' ? [255, 255, 255] : this.color;
+      let stroke = this.isPuzzle ? [255, 255, 255] : this.color;
       if (this.hovered || this === selectedShape) {
-        stroke = [255, 255, 0];
+        stroke = [255, 255, 255];
       }
       $_p.stroke(stroke);
     
       $_p.strokeWeight(2);
-      let shapeColor = this.type !== 'puzzle' ? this.color : [255, 255, 255];
+      let shapeColor = !this.isPuzzle ? this.color : [255, 255, 255];
       $_p.fill(shapeColor);
     
       // Draw shapes with center alignment
@@ -108,13 +111,30 @@ window.s1 = function ($_p) {
     }
   }
 
+  const getValue = (shape) => {
+    let randomValue = shape.values[Math.floor(Math.random() * shape.values.length)];
+    // if an array, pick a random value from aray
+    if (Array.isArray(randomValue)){
+      randomValue = randomValue[Math.floor(Math.random() * randomValue.length)];
+      // remove the value from the array
+      shape.values = shape.values.filter(val => val !== randomValue);      
+    }else{
+      // remove the value from the array
+      shape.values = shape.values.filter(val => val !== randomValue);
+    }
+    
+    return randomValue;
+  };
+
+
+
   const setupPuzzle = () => {
     puzzleShapes = puzzles[currentPuzzle].shapes.map(shapeData => {
       return new Shape({
         shape: shapeData.shape,
         position: shapeData.position,
         rotation: shapeData.rotation || 0,
-        type: 'puzzle'
+        isPuzzle: true
       });
     });
 
@@ -122,16 +142,18 @@ window.s1 = function ($_p) {
       shape: shape.shape,
       position: shape.position,
       rotation: shape.rotation,
-      type: 'piece'
+      isPuzzle: false,
     }));
 
     for (let i = 0; i < Math.ceil(puzzleShapes.length % 3 * 2 + 2); i++) {
       let randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+      // grab a value from the shape
+
       shapesToChoose.push(new Shape({
         shape: randomShape.shape,
         position: [0, 0],
-        rotation: 0,
-        type: 'piece'
+        rotation: 0,        
+        isPuzzle: false,
       }));
     }
 
@@ -152,6 +174,20 @@ window.s1 = function ($_p) {
       shape.rotation = rotation;
     }
   };
+
+
+  const getDirection = (keypress) => {
+
+    
+    if ($_p.keyIsDown($_p.LEFT_ARROW) || keypress === 'a') {
+      return 'left';
+    } else if ($_p.keyIsDown($_p.RIGHT_ARROW) || keypress === 'd') {
+      return 'right';
+    }
+    
+    return null;
+  }
+
 
   const checkPuzzle = () => {
     const tolerance = 10; // Position tolerance in pixels
@@ -211,10 +247,66 @@ window.s1 = function ($_p) {
   };
 
   const shapes = [
-    { shape: 'square', size: 60, color: [255, 0, 0], type: 'identity' },
-    { shape: 'bigTriangle', width: 120, height: 60, color: [0, 255, 0], type: 'big belief' },
-    { shape: 'triangle', width: 60, height: 30, color: [0, 255, 0], type: 'belief' },
-    { shape: 'parallelogram', width: 120, height: 60, color: [0, 0, 255] }
+    { 
+      shape: 'square', size: 60, color: [255, 0, 0], type: 'schema', 
+      values: [
+        ['The world is a safe place', 'The world is a dangerous place'],
+        ['I am in control of my life', 'Things happen to me'],
+        ['I am capable', 'I need help to succeed'],
+        ['I am worthy', 'I am unworthy'],
+        ['I am lovable', 'I am unlovable'],
+        ['I am successful', 'I am a failure'],
+        ['I can rely on myself', 'I need others to rely on'],
+        ['I am accepted by others', 'I am an outsider'],
+
+      ]
+
+    },
+    { shape: 'bigTriangle', width: 120, height: 60, color: [0, 255, 0], type: 'big belief', values: [
+      ['I believe that people are inherently good', 'I believe that people are inherently bad'],
+      ['I believe that there is a higher power','I don\'t believe in a higher power'],
+      ['I believe that everyone deserves basic human rights', 'I believe that you have to earn your place in society'],
+      ['I believe that everything happens for a reason', 'I believe that life is random'],
+      ['I believe that everyone has a purpose', 'I believe that life has no purpose'],
+      ['I believe that love conquers all', 'I believe that power conquers all'],
+      ['I believe that the future is bright', 'I believe that the future is bleak'],
+      ['I believe that we are all connected', 'I believe that we are all alone'],
+      ['I believe that we are all equal', 'I believe that some are better than others'],
+      ['I believe that we are all unique', 'I believe that we are all the same'],
+      ['I believe that we are all capable of change', 'I believe that people never change'],
+      ['I believe that we are all responsible for our actions', 'I believe that we are all victims of circumstance'],
+      
+
+    ] },
+    { shape: 'triangle', width: 60, height: 30, color: [0, 255, 0], type: 'belief', values: [
+      ['I am lazy', 'I am hardworking'],
+      ['I am a pessimist', 'I am an optimist'],
+      ['I am a procrastinator', 'I am a go-getter'],
+      ['I am a perfectionist', 'I am a realist'],
+      ['I am a dreamer', 'I am a realist'],
+      ['I am a follower', 'I am a leader'],
+      ['I am a loner', 'I am a social butterfly'],
+      ['I am a night owl', 'I am an early bird'],
+      ['I am a spender', 'I am a saver'],
+      ['I am a talker', 'I am a listener'],
+      ['I am a giver', 'I am a taker'],
+      ['I am a planner', 'I am a spontaneous'],
+      ['I am a worrier', 'I am carefree'],
+      ['I am a fighter', 'I am a lover']
+    ] },
+    { shape: 'parallelogram', width: 120, height: 60, color: [0, 0, 255], type: 'identity', 
+      values: [
+        ['I am a mother', 'I am a father', 'I do not have children'],
+        ['I am an introvert', 'I am an extrovert'],
+        ['I am an artist', 'I am a scientist', 'I am a writer', 'I am a musician', 'I am a teacher'],
+        ['I am a good person', 'I am a bad person'],
+        ['I came from nothing', 'I came from privilege'],
+        ['I am a woman','I am non-binary', 'I am a man'],
+        ['I am a person of color', 'I am white'],
+        ['I am a survivor', 'I am a victim'],
+
+      ] 
+     }
   ];
 
   let puzzles = [
@@ -240,8 +332,26 @@ window.s1 = function ($_p) {
     $_p.resizeCanvas(windowWidth, windowHeight);
   };
 
-  $_p.draw = () => {        
+  $_p.draw = () => {   
+    
+  
     $_p.background(2);  
+    if (selectedShape) {
+        // make background color pulsate when shape is selected from 0.2 to 0.4 opacity
+        const alpha = 0.4 + 0.2 * Math.sin($_p.frameCount * 0.03);
+        const { levels }= $_p.color(selectedShape.color);
+        // console.log(color);
+        $_p.fill(levels[0], levels[1], levels[2], alpha * 255);
+        $_p.noStroke();
+        $_p.rectMode($_p.CORNER);
+        $_p.rect(0, 0, $_p.width, $_p.height);
+
+        // output value of selected shape
+        $_p.fill(255);
+        $_p.textSize(20);
+        $_p.text(selectedShape.type + ': ' +selectedShape.value, 10, 60);
+
+    }
     $_p.stroke(255);
     $_p.strokeWeight(2);
     $_p.fill(0);
@@ -259,12 +369,12 @@ window.s1 = function ($_p) {
 
     if (selectedShape) {
       if (isKeyHeld && Date.now() - rotationStartTime > holdDelay) {
-        if ($_p.keyIsDown($_p.LEFT_ARROW)) {
-          selectedShape.rotate(-rotationSpeed);
-        } else if ($_p.keyIsDown($_p.RIGHT_ARROW)) {
-          selectedShape.rotate(rotationSpeed);
-        }
+        const direction = getDirection($_p.key);
+        //console.log(direction);
+        const increment = direction === 'left' ? -rotationSpeed : rotationSpeed;
+        selectedShape.rotate(increment);
       }
+
     }
 
     
@@ -308,11 +418,16 @@ window.s1 = function ($_p) {
   };
 
   $_p.keyPressed = () => {
-    if (selectedShape && ($_p.keyCode === $_p.LEFT_ARROW || $_p.keyCode === $_p.RIGHT_ARROW)) {
+
+    const direction = getDirection($_p.key);
+
+
+
+    if (selectedShape && direction) {
       isKeyHeld = true;
       rotationStartTime = Date.now();
       
-      const increment = $_p.keyCode === $_p.LEFT_ARROW ? -45 : 45;
+      const increment = direction === 'left' ? -45 : 45;
       selectedShape.rotate(increment);
     }
   };
