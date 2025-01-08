@@ -5,6 +5,7 @@ window.s1 = function ($_p) {
   let puzzleShapes;
   let draggedShape = null; // To keep track of the currently dragged shape
   let selectedShape = null; // To keep track of the currently selected shape
+  let matchedShapes = []; // Array to store matched shapes
 
   const rotationSpeed = 5; // Degrees per frame when key is held down
   let isKeyHeld = false;
@@ -192,6 +193,7 @@ window.s1 = function ($_p) {
   const checkPuzzle = () => {
     const tolerance = 10; // Position tolerance in pixels
     let allMatch = true;
+    matchedShapes = []; // Clear the matched shapes array
   
     // Check if each puzzle shape has a matching chosen shape
     for (let i = 0; i < puzzleShapes.length; i++) {
@@ -219,7 +221,7 @@ window.s1 = function ($_p) {
             // snap to puzzle position
             chosenShape.position = puzzleShape.position;
             // chosenShape.rotation = puzzleShape.rotation;
-
+            matchedShapes.push(chosenShape); // Add matched shape to the array
             break; // Stop searching once a match is found
           }
         }
@@ -236,6 +238,20 @@ window.s1 = function ($_p) {
       // Additional actions on puzzle completion can go here.
     }
   
+  };
+
+  const displayMatchedShapes = () => {
+    const overlay = document.getElementById('overlay');
+    const matchedShapesList = document.getElementById('matchedShapesList');
+    matchedShapesList.innerHTML = ''; // Clear the list before adding new items
+
+    matchedShapes.forEach((shape, index) => {
+      const listItem = document.createElement('li');
+      listItem.textContent = `${index + 1}. ${shape.type}: ${shape.value}`;
+      matchedShapesList.appendChild(listItem);
+    });
+
+    overlay.style.display = matchedShapes.length > 0 ? 'block' : 'none';
   };
 
   $_p.setup = () => {  
@@ -377,6 +393,7 @@ window.s1 = function ($_p) {
 
     }
 
+    displayMatchedShapes(); // Call the function to display matched shapes
     
   };
 
