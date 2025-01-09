@@ -13,7 +13,7 @@ window.s1 = function ($_p) {
   const holdDelay = 500; // 0.5 seconds in milliseconds
 
   class Shape {
-    constructor({ shape, position = [0, 0], rotation = 0, isPuzzle = true }) {
+    constructor({ shape, position = [0, 0], rotation = 0, isPuzzle = true, value = null }) {
       const shapeDetails = shapes.find(s => s.shape === shape) || {};
       this.shape = shape;
       this.position = position;
@@ -22,13 +22,13 @@ window.s1 = function ($_p) {
       this.size = shapeDetails.size || 60;
       this.width = shapeDetails.width || 60;
       this.height = shapeDetails.height || 60;
-      this.type = shapeDetails.type;
+      this.type = shapeDetails.type;      
       this.isPuzzle = isPuzzle;
       
       this.dragging = false;
       this.offset = [0, 0];  // To store offset during dragging
       this.hovered = false; // To track hover state      
-      this.value = getValue(shapeDetails);
+      this.value = value || getValue(shapeDetails);
     }
 
     display() {
@@ -113,16 +113,16 @@ window.s1 = function ($_p) {
   }
 
   const getValue = (shape) => {
-    let randomValue = shape.values[Math.floor(Math.random() * shape.values.length)];
+    let randomValueIndex = Math.floor(Math.random() * shape.values.length);
+    let randomValue = shape.values[randomValueIndex];
     // if an array, pick a random value from aray
     if (Array.isArray(randomValue)){
-      randomValue = randomValue[Math.floor(Math.random() * randomValue.length)];
-      // remove the value from the array
-      shape.values = shape.values.filter(val => val !== randomValue);      
-    }else{
-      // remove the value from the array
-      shape.values = shape.values.filter(val => val !== randomValue);
+      randomValue = randomValue[Math.floor(Math.random() * randomValue.length)];    
     }
+    // splice out the value from the array
+    shape.values.splice(randomValueIndex, 1);
+    // console.log(randomValue);
+    // console.log(shape.values);
     
     return randomValue;
   };
@@ -141,6 +141,7 @@ window.s1 = function ($_p) {
 
     shapesToChoose = puzzleShapes.map(shape => new Shape({
       shape: shape.shape,
+      value: shape.value,
       position: shape.position,
       rotation: shape.rotation,
       isPuzzle: false,
@@ -157,6 +158,9 @@ window.s1 = function ($_p) {
         isPuzzle: false,
       }));
     }
+
+    // console.log(shapesToChoose.map(s => s.value));
+    // console.log(puzzleShapes.map(s => s.value));
 
     // shuffle
     shapesToChoose = shapesToChoose.sort(() => Math.random() - 0.5);
@@ -402,6 +406,8 @@ window.s1 = function ($_p) {
     for (let i = shapesToChoose.length - 1; i >= 0; i--) {
       const shape = shapesToChoose[i];
       if (shape.isMouseOver($_p.mouseX, $_p.mouseY)) {
+        
+        console.log(shape);
         shape.dragging = true;
         draggedShape = shape;
         selectedShape = shape;
