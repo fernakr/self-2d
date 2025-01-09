@@ -351,21 +351,68 @@ window.s1 = function ($_p) {
   ];
 
   let puzzles = [
+      // Fish
+      {
+        shapes: [
+          // { shape: 'parallelogram', position: [40, 0], rotation: 0 }, 
+          { shape: 'square', position: [0, 0] },                   // Body
+          { shape: 'square', position: [60, 0] },                   // Body
+          { shape: 'square', position: [0, 60] },                   // Body
+          { shape: 'square', position: [60, 60] },                   // Body          
+          { shape: 'bigTriangle', position: [120, 30], rotation: 90 },  // Top fin          
+          { shape: 'square', position: [-60, 30] },                   // Body
+          { shape: 'triangle', position: [-80, -10], rotation: 180 + 45 }, // Bottom fin
+          { shape: 'triangle', position: [-80, 70], rotation:  360 -45 }, // Bottom fin
+
+          { shape: 'triangle', position: [20, -40], rotation: 180 + 45 }, // Bottom fin
+          { shape: 'triangle', position: [20, 100], rotation:  360 -45 }, // Bottom fin
+          
+        ]
+      },
+  // Dog
+  {
+    shapes: [
+      { shape: 'square', position: [0, 0] },                   // Head
+      { shape: 'parallelogram', position: [-40, -40], rotation: -45 }, // Left ear
+      { shape: 'parallelogram', position: [40, -40], rotation: 45 },  // Right ear
+      { shape: 'triangle', position: [0, 30], rotation: 180 }, // Nose
+      { shape: 'triangle', position: [-30, 70], rotation: 0 }, // Left leg
+      { shape: 'triangle', position: [30, 70], rotation: 0 },  // Right leg
+      { shape: 'square', position: [0, 120] },                 // Body
+    ]
+  },
+    // Cat
+    {
+      shapes: [
+        { shape: 'triangle', position: [-30, -20], rotation: 135 }, // Left ear
+        { shape: 'triangle', position: [30, -20], rotation: 45 },  // Right ear
+        { shape: 'square', position: [0, 20] },                   // Face
+        { shape: 'triangle', position: [0, 50], rotation: 180 },  // Nose
+        { shape: 'triangle', position: [-40, 80], rotation: 0 },  // Left whisker
+        { shape: 'triangle', position: [40, 80], rotation: 0 },   // Right whisker
+        { shape: 'parallelogram', position: [-20, 120], rotation: 90 }, // Left paw
+        { shape: 'parallelogram', position: [20, 120], rotation: 90 },  // Right paw
+      ]
+    },
+    // Bunny (original)
     {
       shapes: [
         { shape: 'square', position: [30, 15] },
         { shape: 'square', position: [-30, 15] },
         { shape: 'triangle', position: [0, -30], rotation: 180 },
-        { shape: 'triangle', position: [30, -30]},
+        { shape: 'triangle', position: [30, -30] },
         { shape: 'triangle', position: [-30, -30] },
         { shape: 'parallelogram', position: [15, 75] },
         { shape: 'triangle', position: [-40, -80], rotation: 45 },
-        { shape: 'triangle', position: [-40, -100], rotation: 45 + 90 },
+        { shape: 'triangle', position: [-40, -100], rotation: 135 },
         { shape: 'triangle', position: [15, -80], rotation: 45 },
-        { shape: 'triangle', position: [15, -100], rotation: 45 + 90 },
+        { shape: 'triangle', position: [15, -100], rotation: 135 },
       ]
-    }
+    },
+   
+  
   ];
+  
 
   $_p.windowResized = () => {
     const windowWidth = window.innerWidth;
@@ -465,8 +512,6 @@ window.s1 = function ($_p) {
   $_p.keyPressed = () => {
 
     const direction = getDirection($_p.key);
-
-
 
     if (selectedShape && direction) {
       isKeyHeld = true;
