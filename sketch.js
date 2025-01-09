@@ -11,6 +11,7 @@ window.s1 = function ($_p) {
   let isKeyHeld = false;
   let rotationStartTime = 0;
   const holdDelay = 500; // 0.5 seconds in milliseconds
+  // let matchedShapes = []; // Clear the matched shapes array
 
   class Shape {
     constructor({ shape, position = [0, 0], rotation = 0, isPuzzle = true, value = null }) {
@@ -98,7 +99,7 @@ window.s1 = function ($_p) {
         isOver = rotatedX >= -offset && rotatedX <= this.width + offset && rotatedY >= -this.height / 2 && rotatedY <= this.height / 2;
       }
     
-      this.hovered = isOver;
+      
       return isOver;
     }
     
@@ -199,7 +200,7 @@ window.s1 = function ($_p) {
   const checkPuzzle = () => {
     const tolerance = 10; // Position tolerance in pixels
     let allMatch = true;
-    matchedShapes = []; // Clear the matched shapes array
+    
   
     // Check if each puzzle shape has a matching chosen shape
     for (let i = 0; i < puzzleShapes.length; i++) {
@@ -239,7 +240,7 @@ window.s1 = function ($_p) {
             if (!valueMatch) {
               chosenShape.status = 'wrong';
               // break;
-            }else{
+            }else if (chosenShape.status !== 'done'){
               chosenShape.status = 'done';            
               matchFound = true;                                    
               matchedShapes.push(chosenShape); // Add matched shape to the array
@@ -271,7 +272,7 @@ window.s1 = function ($_p) {
 
     matchedShapes.forEach((shape, index) => {
       const listItem = document.createElement('li');
-      listItem.textContent = `${index + 1}. ${shape.type}: ${shape.value}`;
+      listItem.textContent = `${shape.type}: ${shape.value}`;
       matchedShapesList.appendChild(listItem);
     });
 
@@ -424,10 +425,10 @@ window.s1 = function ($_p) {
   $_p.mousePressed = () => {
     let clickedOnShape = null;
     for (let i = shapesToChoose.length - 1; i >= 0; i--) {
-      const shape = shapesToChoose[i];
-      console.log(shape)
-      if (shape.isMouseOver($_p.mouseX, $_p.mouseY) && shape.status !== 'done') {
-        
+      const shape = shapesToChoose[i];      
+      const isOver = shape.isMouseOver($_p.mouseX, $_p.mouseY);
+      if ( isOver && shape.status !== 'done') {
+        this.hovered = isOver;
         // console.log(shape);
         shape.dragging = true;
         draggedShape = shape;
