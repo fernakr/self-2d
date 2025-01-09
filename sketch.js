@@ -28,7 +28,9 @@ window.s1 = function ($_p) {
       this.dragging = false;
       this.offset = [0, 0];  // To store offset during dragging
       this.hovered = false; // To track hover state      
+    
       this.value = value || getValue(shapeDetails);
+      this.status = 'active';
     }
 
     display() {
@@ -45,7 +47,7 @@ window.s1 = function ($_p) {
     
       $_p.strokeWeight(2);
       let shapeColor = !this.isPuzzle ? this.color : [255, 255, 255];
-      $_p.fill(shapeColor);
+      $_p.fill(this.status === 'wrong' ? 'transparent' : shapeColor);
     
       // Draw shapes with center alignment
       if (this.shape === 'square') {
@@ -159,8 +161,8 @@ window.s1 = function ($_p) {
       }));
     }
 
-    // console.log(shapesToChoose.map(s => s.value));
-    // console.log(puzzleShapes.map(s => s.value));
+    console.log(shapesToChoose.map(s => s.value));
+    console.log(puzzleShapes.map(s => s.value));
 
     // shuffle
     shapesToChoose = shapesToChoose.sort(() => Math.random() - 0.5);
@@ -202,6 +204,8 @@ window.s1 = function ($_p) {
     // Check if each puzzle shape has a matching chosen shape
     for (let i = 0; i < puzzleShapes.length; i++) {
       const puzzleShape = puzzleShapes[i];
+      console.log('------');      
+      console.log(puzzleShape.value);      
       let matchFound = false;
   
       for (let j = 0; j < shapesToChoose.length; j++) {
@@ -209,6 +213,9 @@ window.s1 = function ($_p) {
   
         // if (puzzleShape.shape !== chosenShape.shape)  return false;
         if (puzzleShape.shape === chosenShape.shape) {
+
+          
+          
           const posMatch = 
             Math.abs(chosenShape.position[0] - puzzleShape.position[0]) <= tolerance &&
             Math.abs(chosenShape.position[1] - puzzleShape.position[1]) <= tolerance;            
@@ -221,15 +228,28 @@ window.s1 = function ($_p) {
           }
   
           if (posMatch && rotMatch) {
-            matchFound = true;
-            // snap to puzzle position
+
+            
+            chosenShape.hovered = false;
             chosenShape.position = puzzleShape.position;
-            // chosenShape.rotation = puzzleShape.rotation;
-            matchedShapes.push(chosenShape); // Add matched shape to the array
-            break; // Stop searching once a match is found
+
+            if (chosenShape === selectedShape) selectedShape = null;
+
+            const valueMatch = puzzleShapes.some(s => s.value === chosenShape.value && s.shape === chosenShape.shape);
+            if (!valueMatch) {
+              chosenShape.status = 'wrong';
+              // break;
+            }else{
+              chosenShape.status = 'done';            
+              matchFound = true;                                    
+              matchedShapes.push(chosenShape); // Add matched shape to the array
+              break; // Stop searching once a match is found
+            }            
           }
         }
       }
+
+      console.log(shapesToChoose);
   
       if (!matchFound) {
         allMatch = false;
@@ -405,9 +425,10 @@ window.s1 = function ($_p) {
     let clickedOnShape = null;
     for (let i = shapesToChoose.length - 1; i >= 0; i--) {
       const shape = shapesToChoose[i];
-      if (shape.isMouseOver($_p.mouseX, $_p.mouseY)) {
+      console.log(shape)
+      if (shape.isMouseOver($_p.mouseX, $_p.mouseY) && shape.status !== 'done') {
         
-        console.log(shape);
+        // console.log(shape);
         shape.dragging = true;
         draggedShape = shape;
         selectedShape = shape;
