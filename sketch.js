@@ -471,9 +471,9 @@ window.s1 = function ($_p) {
         // find color from shape
         color = selectedShape.color;
 
-        $_p.fill(color);
-        $_p.stroke($_p.color(0,0,0,100));
-        $_p.strokeWeight(2);
+        $_p.stroke(color);
+        $_p.fill(255);
+        $_p.strokeWeight(4);
        
         // $_p.fill(255);
         $_p.textSize(20);
