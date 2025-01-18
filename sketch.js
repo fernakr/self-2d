@@ -1,3 +1,4 @@
+
 window.s1 = function ($_p) {  
   const puzzles = [
     // Fish
@@ -351,6 +352,8 @@ window.s1 = function ($_p) {
       // console.log("You found your self!");
       // Additional actions on puzzle completion can go here.
     }
+
+    displayMatchedShapes(); // Call the function to display matched shapes
   
   };
 
@@ -362,6 +365,8 @@ window.s1 = function ($_p) {
     matchedShapes.forEach((shape, index) => {
       const listItem = document.createElement('li');
       listItem.textContent = `${shape.type}: ${shape.value}`;
+      console.log(shape.color);
+      listItem.style.color = 'rgb(' + shape.color.join(',') + ')';
       matchedShapesList.appendChild(listItem);
     });
 
@@ -457,14 +462,24 @@ window.s1 = function ($_p) {
         const { levels }= $_p.color(selectedShape.color);
         // console.log(color);
         $_p.fill(levels[0], levels[1], levels[2], alpha * 255);
-        $_p.noStroke();
+        // $_p.noStroke();
         $_p.rectMode($_p.CORNER);
         $_p.rect(0, 0, $_p.width, $_p.height);
 
         // output value of selected shape
-        $_p.fill(255);
+        let color;
+        // find color from shape
+        color = selectedShape.color;
+
+        $_p.fill(color);
+        $_p.stroke($_p.color(0,0,0,100));
+        $_p.strokeWeight(2);
+       
+        // $_p.fill(255);
         $_p.textSize(20);
-        $_p.text(selectedShape.type + ': ' +selectedShape.value, 10, 60);
+        $_p.textAlign($_p.CENTER, $_p.CENTER);
+
+        $_p.text(selectedShape.type + ': ' +selectedShape.value, $_p.width/2, 60);
 
     }
     $_p.stroke(255);
@@ -492,7 +507,7 @@ window.s1 = function ($_p) {
 
     }
 
-    displayMatchedShapes(); // Call the function to display matched shapes
+    
     
   };
 
@@ -563,3 +578,4 @@ window.s1 = function ($_p) {
 
 if (window.p5instance) window.p5instance.remove();
 window.p5instance = new p5(window.s1);
+
