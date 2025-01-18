@@ -1,6 +1,90 @@
 window.s1 = function ($_p) {  
+  const puzzles = [
+    // Fish
+    {
+      shapes: [
+        // { shape: 'parallelogram', position: [40, 0], rotation: 0 }, 
+        { shape: 'square', position: [0, 0] },                   // Body
+        { shape: 'square', position: [60, 0] },                   // Body
+        { shape: 'square', position: [0, 60] },                   // Body
+        { shape: 'square', position: [60, 60] },                   // Body          
+        { shape: 'bigTriangle', position: [120, 30], rotation: 90 },  // Top fin          
+        { shape: 'square', position: [-60, 30] },                   // Body
+        { shape: 'triangle', position: [-80, -10], rotation: 180 + 45 }, // Bottom fin
+        { shape: 'triangle', position: [-80, 70], rotation:  360 -45 }, // Bottom fin
 
-  let currentPuzzle = 0;
+        { shape: 'triangle', position: [20, -40], rotation: 180 + 45 }, // Bottom fin
+        { shape: 'triangle', position: [20, 100], rotation:  360 -45 }, // Bottom fin
+        
+      ]
+    },
+  // Dog
+  {
+    shapes: [
+      { shape: 'square', position: [60, -5 - 30] },                   // Head
+      { shape: 'square', position: [30, 55- 30] },                   // Head
+      { shape: 'square', position: [-30, 55- 30] },                   // Head
+      { shape: 'square', position: [-90, 55- 30] },                   // Head
+      // { shape: 'parallelogram', position: [-40, -40- 30], rotation: -45 }, // Left ear
+      // { shape: 'parallelogram', position: [40, -40- 30], rotation: 45 },  // Right ear
+      { shape: 'triangle', position: [100, 15- 30], rotation: 180 + 45 }, // Nose
+    
+      { shape: 'triangle', position: [30, -50- 30], rotation: 0 }, // Left leg
+      { shape: 'triangle', position: [90, -50- 30], rotation: 0 },  // Right leg
+
+      { shape: 'triangle', position: [70, 120- 30], rotation: 180 + 45 }, // Nose
+      { shape: 'triangle', position: [25, 120- 30], rotation: 180 + 45 }, // Nose
+
+      { shape: 'triangle', position: [-65, 120- 30], rotation: 180 + 45 }, // Nose
+      { shape: 'triangle', position: [-110, 120- 30], rotation: 180 + 45 }, // Nose
+
+      { shape: 'triangle', position: [-110, 15- 30], rotation: 180 + 45 }, // Nose
+
+      // { shape: 'square', position: [0, 110] },                 // Body
+    ]
+  },
+    // Cat
+    {
+      shapes: [
+        { shape: 'triangle', position: [-60, -60], rotation: 180 + 45 }, // Left ear
+        { shape: 'triangle', position: [0, -60], rotation: 90 + 45 },  // Right ear
+
+        { shape: 'triangle', position: [100, 0], rotation: 90 + 45 },  // Right ear
+        { shape: 'square', position: [-30, -20] },                   // Face
+        { shape: 'parallelogram', position: [30, 40], rotation: 0 }, // Left paw
+
+        { shape: 'triangle', position: [-30, 100], rotation: 90 + 45 },  // Nose
+        { shape: 'triangle', position: [10, 100], rotation: 90 + 45 },  // Nose
+
+        { shape: 'triangle', position: [60, 100], rotation: 90 + 45 },  // Nose
+        { shape: 'triangle', position: [100, 100], rotation: 90 + 45 },  // Nose
+        // { shape: 'triangle', position: [-40, 80], rotation: 0 },  // Left whisker
+        // { shape: 'triangle', position: [40, 80], rotation: 0 },   // Right whisker
+        
+        // { shape: 'parallelogram', position: [20, 120], rotation: 90 },  // Right paw
+      ]
+    },
+    // Bunny (original)
+    {
+      shapes: [
+        { shape: 'square', position: [30, 15] },
+        { shape: 'square', position: [-30, 15] },
+        { shape: 'triangle', position: [0, -30], rotation: 180 },
+        { shape: 'triangle', position: [30, -30] },
+        { shape: 'triangle', position: [-30, -30] },
+        { shape: 'parallelogram', position: [15, 75] },
+        { shape: 'triangle', position: [-40, -80], rotation: 45 },
+        { shape: 'triangle', position: [-40, -100], rotation: 135 },
+        { shape: 'triangle', position: [15, -80], rotation: 45 },
+        { shape: 'triangle', position: [15, -100], rotation: 135 },
+      ]
+    },
+  
+
+  ];
+
+  // random
+  const currentPuzzle = Math.floor(Math.random() * puzzles.length);
   let shapesToChoose;
   let puzzleShapes;
   let draggedShape = null; // To keep track of the currently dragged shape
@@ -162,8 +246,8 @@ window.s1 = function ($_p) {
       }));
     }
 
-    console.log(shapesToChoose.map(s => s.value));
-    console.log(puzzleShapes.map(s => s.value));
+    // console.log(shapesToChoose.map(s => s.value));
+    // console.log(puzzleShapes.map(s => s.value));
 
     // shuffle
     shapesToChoose = shapesToChoose.sort(() => Math.random() - 0.5);
@@ -202,11 +286,12 @@ window.s1 = function ($_p) {
     let allMatch = true;
     
   
+    console.log('------');
     // Check if each puzzle shape has a matching chosen shape
     for (let i = 0; i < puzzleShapes.length; i++) {
       const puzzleShape = puzzleShapes[i];
-      console.log('------');      
-      console.log(puzzleShape.value);      
+      // console.log('------');      
+      // console.log(puzzleShape.value);      
       let matchFound = false;
   
       for (let j = 0; j < shapesToChoose.length; j++) {
@@ -236,30 +321,34 @@ window.s1 = function ($_p) {
 
             if (chosenShape === selectedShape) selectedShape = null;
 
-            const valueMatch = puzzleShapes.some(s => s.value === chosenShape.value && s.shape === chosenShape.shape);
+            const valueMatch = puzzleShapes.some(s => s.value === chosenShape.value && s.shape === chosenShape.shape);            
             if (!valueMatch) {
               chosenShape.status = 'wrong';
               // break;
-            }else if (chosenShape.status !== 'done'){
-              chosenShape.status = 'done';            
-              matchFound = true;                                    
-              matchedShapes.push(chosenShape); // Add matched shape to the array
+            }else{
+              if (chosenShape.status !== 'done'){
+                chosenShape.status = 'done';                                                          
+                matchedShapes.push(chosenShape); // Add matched shape to the array                
+              }
+              matchFound = true;    
               break; // Stop searching once a match is found
-            }            
-          }
+            }                     
+          }        
         }
       }
 
-      console.log(shapesToChoose);
+      // console.log(shapesToChoose);
   
       if (!matchFound) {
         allMatch = false;
+        console.log("No match found");
         // break; // Exit if any puzzle shape has no matching chosen shape
       }
     }
   
     if (allMatch) {
-      console.log("Puzzle completed!");
+      alert('Congrats you found your self!')
+      // console.log("You found your self!");
       // Additional actions on puzzle completion can go here.
     }
   
@@ -350,69 +439,7 @@ window.s1 = function ($_p) {
      }
   ];
 
-  let puzzles = [
-      // Fish
-      {
-        shapes: [
-          // { shape: 'parallelogram', position: [40, 0], rotation: 0 }, 
-          { shape: 'square', position: [0, 0] },                   // Body
-          { shape: 'square', position: [60, 0] },                   // Body
-          { shape: 'square', position: [0, 60] },                   // Body
-          { shape: 'square', position: [60, 60] },                   // Body          
-          { shape: 'bigTriangle', position: [120, 30], rotation: 90 },  // Top fin          
-          { shape: 'square', position: [-60, 30] },                   // Body
-          { shape: 'triangle', position: [-80, -10], rotation: 180 + 45 }, // Bottom fin
-          { shape: 'triangle', position: [-80, 70], rotation:  360 -45 }, // Bottom fin
 
-          { shape: 'triangle', position: [20, -40], rotation: 180 + 45 }, // Bottom fin
-          { shape: 'triangle', position: [20, 100], rotation:  360 -45 }, // Bottom fin
-          
-        ]
-      },
-  // Dog
-  {
-    shapes: [
-      { shape: 'square', position: [0, 0] },                   // Head
-      { shape: 'parallelogram', position: [-40, -40], rotation: -45 }, // Left ear
-      { shape: 'parallelogram', position: [40, -40], rotation: 45 },  // Right ear
-      { shape: 'triangle', position: [0, 30], rotation: 180 }, // Nose
-      { shape: 'triangle', position: [-30, 70], rotation: 0 }, // Left leg
-      { shape: 'triangle', position: [30, 70], rotation: 0 },  // Right leg
-      { shape: 'square', position: [0, 120] },                 // Body
-    ]
-  },
-    // Cat
-    {
-      shapes: [
-        { shape: 'triangle', position: [-30, -20], rotation: 135 }, // Left ear
-        { shape: 'triangle', position: [30, -20], rotation: 45 },  // Right ear
-        { shape: 'square', position: [0, 20] },                   // Face
-        { shape: 'triangle', position: [0, 50], rotation: 180 },  // Nose
-        { shape: 'triangle', position: [-40, 80], rotation: 0 },  // Left whisker
-        { shape: 'triangle', position: [40, 80], rotation: 0 },   // Right whisker
-        { shape: 'parallelogram', position: [-20, 120], rotation: 90 }, // Left paw
-        { shape: 'parallelogram', position: [20, 120], rotation: 90 },  // Right paw
-      ]
-    },
-    // Bunny (original)
-    {
-      shapes: [
-        { shape: 'square', position: [30, 15] },
-        { shape: 'square', position: [-30, 15] },
-        { shape: 'triangle', position: [0, -30], rotation: 180 },
-        { shape: 'triangle', position: [30, -30] },
-        { shape: 'triangle', position: [-30, -30] },
-        { shape: 'parallelogram', position: [15, 75] },
-        { shape: 'triangle', position: [-40, -80], rotation: 45 },
-        { shape: 'triangle', position: [-40, -100], rotation: 135 },
-        { shape: 'triangle', position: [15, -80], rotation: 45 },
-        { shape: 'triangle', position: [15, -100], rotation: 135 },
-      ]
-    },
-   
-  
-  ];
-  
 
   $_p.windowResized = () => {
     const windowWidth = window.innerWidth;
@@ -444,7 +471,7 @@ window.s1 = function ($_p) {
     $_p.strokeWeight(2);
     $_p.fill(0);
     $_p.textSize(20);
-    $_p.text("Puzzle " + currentPuzzle, 10, 30);
+    // $_p.text("Puzzle " + currentPuzzle, 10, 30);
 
     $_p.translate($_p.width / 2, $_p.height / 2);
 
