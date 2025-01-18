@@ -462,7 +462,7 @@ window.s1 = function ($_p) {
         const { levels }= $_p.color(selectedShape.color);
         // console.log(color);
         $_p.fill(levels[0], levels[1], levels[2], alpha * 255);
-        // $_p.noStroke();
+        $_p.noStroke();
         $_p.rectMode($_p.CORNER);
         $_p.rect(0, 0, $_p.width, $_p.height);
 
